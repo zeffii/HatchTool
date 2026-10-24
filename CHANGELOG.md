@@ -1,5 +1,9 @@
 # Changelog
 
+## 004 · 2026-10-24
+
+- README_TLDR.md: the five things you need, one line each
+
 ## 003 · 2026-10-24
 
 - Sverchok Hatch Pattern node, geometry mode (`sverchok/`): one stream per object; Vertices with Polygons (holes by even-odd) or closed boundary Edges; plane inferred (polygon winding, or a best fit with a fixed facing for edges); Scale and Offset X / Y per object
