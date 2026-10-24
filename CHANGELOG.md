@@ -1,5 +1,10 @@
 # Changelog
 
+## 007 · 2026-10-24
+
+- Sverchok node: status line under the pattern picker with dash, dot and object counts
+- Hints when the result looks wrong: millimetre pattern at Scale 1 ("Scale 0.001 for metres"), lines wider apart than the region (suggests a scale), close to Max Segments, and region errors
+
 ## 006 · 2026-10-24
 
 - Browser tab shows the build number (HatchTool 006); a test keeps it in step with this changelog

@@ -236,6 +236,7 @@ def make_node(text, pattern_name, **inputs):
     node.pattern_text = NS(name="lib.pat", as_string=lambda: text)
     node.pattern_name, node.node_id = pattern_name, "test"
     node.min_length, node.order_strokes, node.max_segments = 0.0, True, 1_000_000
+    node.status, node.status_level = "", "INFO"
     defaults = {"Vertices": None, "Edges": None, "Polygons": None,
                 "Scale": [[1.0]], "Offset X": [[0.0]], "Offset Y": [[0.0]]}
     defaults.update(inputs)
@@ -304,6 +305,42 @@ class NodeTests(unittest.TestCase):
         with self.assertRaises(hp.RegionError) as ctx:
             node.process()
         self.assertIn("object 1", str(ctx.exception))
+
+
+class StatusTests(unittest.TestCase):
+
+    def test_counts_when_it_works(self):
+        verts = [(0, 0, 0), (900, 0, 0), (900, 600, 0), (0, 600, 0)]
+        node = make_node(LIB["TILE-SQUARE-300"][1], "TILE-SQUARE-300", Vertices=[verts, verts], Polygons=[[[0, 1, 2, 3]]])
+        node.process()
+        self.assertEqual(node.status_level, "INFO")
+        self.assertRegex(node.status, r"^\d[\d,]* dashes · 2 objects$")
+
+    def test_millimetre_pattern_in_metres(self):
+        # a 2 m plane with a mm brick pattern at Scale 1: nothing inside, point at the unit
+        verts = [(0, 0, 0), (2, 0, 0), (2, 2, 0), (0, 2, 0)]
+        node = make_node(LIB["BRICK-STRETCHER"][1], "BRICK-STRETCHER", Vertices=[verts], Polygons=[[[0, 1, 2, 3]]])
+        node.process()
+        self.assertEqual(node.status_level, "WARNING")
+        self.assertIn("pattern is in mm: Scale 0.001 for metres", node.status)
+
+    def test_scale_suggestion_without_units(self):
+        text = "*WIDE\n0, 0,0, 0,50\n"
+        verts = [(0, 0, 0), (2, 0, 0), (2, 2, 0), (0, 2, 0)]
+        node = make_node(text, "WIDE", Vertices=[verts], Polygons=[[[0, 1, 2, 3]]])
+        node.process()
+        self.assertIn("lines are wider apart than the region: try Scale ≈ 0.0016", node.status)
+        hp_suggested = hp.suggest_scale(hp.parse_pat(text)[0][0], 2.0)
+        r = hp.hatch_region(verts, hp.parse_pat(text)[0][0], loops=[[0, 1, 2, 3]], scale=hp_suggested)
+        self.assertGreater(len(r.segments), 10)
+
+    def test_errors_show_in_the_status(self):
+        verts = [(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0)]
+        node = make_node(LIB["BRICK-STACK"][1], "BRICK-STACK", Vertices=[verts], Edges=[[[0, 1], [1, 2]]])
+        with self.assertRaises(hp.RegionError):
+            node.process()
+        self.assertEqual(node.status_level, "WARNING")
+        self.assertIn("not closed", node.status)
 
 
 if __name__ == "__main__":
