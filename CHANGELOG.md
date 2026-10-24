@@ -1,5 +1,9 @@
 # Changelog
 
+## 006 · 2026-10-24
+
+- Browser tab shows the build number (HatchTool 006); a test keeps it in step with this changelog
+
 ## 005 · 2026-10-24
 
 - Bench header: Code button linking to the GitHub repository

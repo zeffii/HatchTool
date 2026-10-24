@@ -85,3 +85,10 @@ test('fit keeps every library pattern within the dash budget', () => {
     assert.ok(lib.estimatePattern(p, 1, 0, rect) <= 60000, p.name);
   }
 });
+
+test('browser tab shows the latest changelog build number', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
+  const latest = changelog.match(/^## (\d{3}) /m)[1];
+  assert.equal(html.match(/<title>([^<]*)<\/title>/)[1], `HatchTool ${latest}`);
+});
