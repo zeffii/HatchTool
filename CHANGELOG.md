@@ -1,5 +1,9 @@
 # Changelog
 
+## 005 · 2026-10-24
+
+- Bench header: Code button linking to the GitHub repository
+
 ## 004 · 2026-10-24
 
 - README_TLDR.md: the five things you need, one line each

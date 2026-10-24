@@ -51,19 +51,22 @@ h1 {
   letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap;
 }
 h1 span { color: var(--muted); font-weight: 500; }
-.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; flex: 1; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; flex: 1; }
 .ctl { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
 .ctl input[type="number"] {
-  width: 4.6em; font-family: var(--font-mono); font-size: 13px; padding: 4px 6px;
+  width: 3.8em; font-family: var(--font-mono); font-size: 13px; padding: 4px 6px;
   border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink);
 }
-.ctl input[type="range"] { width: 80px; accent-color: var(--accent); }
+.ctl input[type="range"] { width: 64px; accent-color: var(--accent); }
 .ctl input[type="checkbox"] { accent-color: var(--accent); }
-button, .filebtn {
+button, .filebtn, .linkbtn {
   font-family: var(--font-body); font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 4px;
   border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; white-space: nowrap;
 }
-button:hover, .filebtn:hover { border-color: var(--accent); }
+button:hover, .filebtn:hover, .linkbtn:hover { border-color: var(--accent); }
+.linkbtn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.linkbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.linkbtn svg { width: 14px; height: 14px; }
 button:focus-visible, .filebtn:focus-within, input:focus-visible, textarea:focus-visible, .pat:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 1px;
 }
@@ -169,7 +172,8 @@ textarea {
     <label class="ctl" for="colorize"><input id="colorize" type="checkbox"> Colour families</label>
     <label class="ctl" for="origins"><input id="origins" type="checkbox"> Origins</label>
   </div>
-  <div style="display:flex;gap:8px">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="linkbtn" href="https://github.com/zeffii/HatchTool" target="_blank" rel="noopener" title="Source code on GitHub"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 4 1.5 8l4 4M10.5 4l4 4-4 4"/></svg>Code</a>
     <label class="filebtn" for="folder">Open folder…<input id="folder" type="file" webkitdirectory multiple></label>
     <label class="filebtn primary" for="files">Open .pat…<input id="files" type="file" accept=".pat,.PAT,text/plain" multiple></label>
   </div>
