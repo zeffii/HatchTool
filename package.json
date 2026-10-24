@@ -1,13 +1,14 @@
 {
   "name": "hatchtool",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Viewer and editor for AutoCAD / Revit .pat hatch patterns",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
     "embed": "node scripts/embed.js",
-    "patterns": "python3 tools/patgen.py && node scripts/embed.js"
+    "patterns": "python3 tools/patgen.py && node scripts/embed.js",
+    "test:py": "python3 -m unittest discover sverchok/tests"
   },
   "license": "GPL-3.0-or-later"
 }

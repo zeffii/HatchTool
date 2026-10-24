@@ -1,5 +1,13 @@
 # Changelog
 
+## 003 · 2026-10-24
+
+- Sverchok Hatch Pattern node, geometry mode (`sverchok/`): one stream per object; Vertices with Polygons (holes by even-odd) or closed boundary Edges; plane inferred (polygon winding, or a best fit with a fixed facing for edges); Scale and Offset X / Y per object
+- Plotting outputs: dashes chained into strokes (collinear pieces merged, outlines closed) and ordered nearest-first to cut pen travel; Min Length drops slivers left by clipping
+- Open boundaries and too-dense hatches stop with an error naming the object
+- Python tests for the core and the node's process(), run in CI
+- Shorter README
+
 ## 002 · 2026-10-24
 
 - Pattern library: 35 patterns drawn for HatchTool in five files (bricks, tiles and paving, stone, foliage, materials), metric with Revit model-pattern directives

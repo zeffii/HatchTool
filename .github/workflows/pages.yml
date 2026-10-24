@@ -26,6 +26,11 @@ jobs:
         with:
           node-version: 22
       - run: npm test
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - run: pip install numpy
+      - run: npm run test:py
       - name: Collect site files
         run: |
           mkdir -p _site
