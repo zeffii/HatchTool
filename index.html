@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Hatch Pattern Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* layout: drafting bench — pattern drawer on the left, a single pannable sheet filling the rest */
+:root {
+  --paper: #eef1ef;
+  --panel: #f8faf9;
+  --ink: #18262b;
+  --muted: #5b6a6e;
+  --rule: #d2d9d6;
+  --accent: #23698a;
+  --accent-ink: #ffffff;
+  --warn: #a8501f;
+  --sel: rgba(35, 105, 138, 0.12);
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141a1c; --panel: #1b2225; --ink: #dce6e4; --muted: #8b9a9c; --rule: #2b3539;
+    --accent: #6db4d6; --accent-ink: #0d1a20; --warn: #e3905f; --sel: rgba(109, 180, 214, 0.14);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141a1c; --panel: #1b2225; --ink: #dce6e4; --muted: #8b9a9c; --rule: #2b3539;
+  --accent: #6db4d6; --accent-ink: #0d1a20; --warn: #e3905f; --sel: rgba(109, 180, 214, 0.14);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 14px;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+  padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--rule); background: var(--panel);
+}
+h1 {
+  margin: 0; font-family: var(--font-display); font-stretch: 78%; font-weight: 700; font-size: 18px;
+  letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap;
+}
+h1 span { color: var(--muted); font-weight: 500; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; flex: 1; }
+.ctl { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.ctl input[type="number"] {
+  width: 4.6em; font-family: var(--font-mono); font-size: 13px; padding: 4px 6px;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink);
+}
+.ctl input[type="range"] { width: 80px; accent-color: var(--accent); }
+.ctl input[type="checkbox"] { accent-color: var(--accent); }
+button, .filebtn {
+  font-family: var(--font-body); font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 4px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink); cursor: pointer; white-space: nowrap;
+}
+button:hover, .filebtn:hover { border-color: var(--accent); }
+button:focus-visible, .filebtn:focus-within, input:focus-visible, textarea:focus-visible, .pat:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.filebtn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.filebtn { position: relative; }
+
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); }
+aside {
+  border-right: 1px solid var(--rule); background: var(--panel); min-height: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.drawer { overflow-y: auto; flex: 1; min-height: 0; }
+.search { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.search input {
+  flex: 1; min-width: 0; font-family: var(--font-body); font-size: 13px; padding: 6px 8px;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink);
+}
+.sub-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding: 8px 14px 2px; }
+.group-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+  padding: 12px 14px 6px; position: sticky; top: 0; background: var(--panel); z-index: 1;
+  display: flex; justify-content: space-between; gap: 8px;
+}
+.pat {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: center;
+  padding: 6px 14px; cursor: pointer; border-left: 3px solid transparent;
+}
+.pat:hover { background: var(--sel); }
+.pat[aria-selected="true"] { background: var(--sel); border-left-color: var(--accent); }
+.pat canvas { width: 52px; height: 52px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper); }
+.pat .nm { font-family: var(--font-mono); font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pat .ds { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pat .err { color: var(--warn); font-size: 12px; }
+
+.sheet { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+#view { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; background: var(--paper); }
+#view.dragging { cursor: grabbing; }
+.hud {
+  position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 2px; pointer-events: none;
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+  background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 6px 9px; border-radius: 4px; border: 1px solid var(--rule);
+}
+.hud b { color: var(--ink); font-weight: 600; }
+.notice {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 80%;
+  background: var(--panel); border: 1px solid var(--warn); color: var(--warn); border-radius: 4px; padding: 10px 14px;
+  font-size: 13px; text-align: center;
+}
+.zoom { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; }
+.zoom button { width: 34px; padding: 6px 0; font-family: var(--font-mono); }
+
+.bench { border-top: 1px solid var(--rule); background: var(--panel); display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); max-height: 34vh; min-height: 150px; }
+.bench > section { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.bench > section + section { border-left: 1px solid var(--rule); }
+.bench h2 {
+  margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600;
+  padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; border-bottom: 1px solid var(--rule);
+}
+.families { overflow: auto; flex: 1; min-height: 0; }
+table { border-collapse: collapse; width: 100%; font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+th { position: sticky; top: 0; background: var(--panel); text-align: right; font-weight: 600; color: var(--muted); padding: 4px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+td { text-align: right; padding: 2px 8px; white-space: nowrap; border-bottom: 1px solid color-mix(in srgb, var(--rule) 50%, transparent); }
+th:first-child, td:first-child { text-align: left; }
+td.dash { text-align: left; color: var(--muted); }
+tr.fam { cursor: pointer; }
+tr.fam:hover td { background: var(--sel); }
+tr.fam.on td { background: var(--sel); color: var(--accent); }
+.swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+textarea {
+  flex: 1; min-height: 0; resize: none; border: 0; padding: 8px 12px; background: var(--panel); color: var(--ink);
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.5; white-space: pre; overflow: auto; tab-size: 4;
+}
+.issues { color: var(--warn); font-family: var(--font-mono); font-size: 12px; padding: 4px 12px; border-top: 1px solid var(--rule); max-height: 4.5em; overflow: auto; }
+.status { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.dropping::after {
+  content: "Drop .pat files to load them"; position: fixed; inset: 12px; border: 2px dashed var(--accent); border-radius: 8px;
+  display: grid; place-items: center; font-size: 18px; font-weight: 600; color: var(--accent);
+  background: color-mix(in srgb, var(--paper) 80%, transparent); z-index: 20;
+}
+
+@media (max-width: 760px) {
+  body { overflow: auto; height: auto; }
+  html { height: auto; }
+  main { grid-template-columns: minmax(0, 1fr); }
+  aside { border-right: 0; border-bottom: 1px solid var(--rule); max-height: 210px; order: 2; }
+  .sheet { order: 1; height: 62vh; }
+  .bench { grid-template-columns: minmax(0, 1fr); max-height: none; }
+  .bench > section + section { border-left: 0; border-top: 1px solid var(--rule); }
+  .families { max-height: 240px; }
+  textarea { min-height: 220px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hatch Pattern Bench <span>.pat</span></h1>
+  <div class="controls">
+    <label class="ctl" for="scale">Scale <input id="scale" type="number" value="1" min="0.001" step="0.1"></label>
+    <label class="ctl" for="rot">Angle° <input id="rot" type="number" value="0" step="5"></label>
+    <label class="ctl" for="weight">Weight <input id="weight" type="range" min="0.5" max="3" step="0.25" value="1"></label>
+    <label class="ctl" for="colorize"><input id="colorize" type="checkbox"> Colour families</label>
+    <label class="ctl" for="origins"><input id="origins" type="checkbox"> Origins</label>
+  </div>
+  <div style="display:flex;gap:8px">
+    <label class="filebtn" for="folder">Open folder…<input id="folder" type="file" webkitdirectory multiple></label>
+    <label class="filebtn primary" for="files">Open .pat…<input id="files" type="file" accept=".pat,.PAT,text/plain" multiple></label>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="search"><input id="search" type="search" placeholder="Filter patterns" aria-label="Filter patterns" autocomplete="off"><span id="count" class="status"></span></div>
+    <div class="drawer" id="drawer" role="listbox" aria-label="Patterns"></div>
+  </aside>
+  <div class="sheet">
+    <div style="position:relative; min-height:0">
+      <canvas id="view" aria-label="Hatch preview"></canvas>
+      <div class="hud" id="hud"></div>
+      <div class="zoom">
+        <button id="zin" title="Zoom in" aria-label="Zoom in">+</button>
+        <button id="zout" title="Zoom out" aria-label="Zoom out">−</button>
+        <button id="fit" title="Fit to pattern" aria-label="Fit to pattern" style="width:auto;padding:6px 10px">Fit</button>
+      </div>
+      <div class="notice" id="notice" hidden></div>
+    </div>
+    <div class="bench">
+      <section>
+        <h2><span>Line families</span><span class="status" id="famstat"></span></h2>
+        <div class="families" id="families"></div>
+      </section>
+      <section>
+        <h2><span>Source</span><span style="display:flex;gap:6px"><button id="revert" title="Undo your edits to this pattern">Revert</button><button id="copy">Copy .pat</button></span></h2>
+        <textarea id="source" spellcheck="false" aria-label="Pattern source"></textarea>
+        <div class="issues" id="issues" hidden></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script>
+const SAMPLE_FILES = {"Examples":{"examples.pat":";; Example patterns for Hatch Pattern Bench, written for this project.\n*EX-RUNNING-BOND, Example: running bond, 2 x 1 units\n0, 0,0, 0,1\n90, 0,0, 1,1, 1,-1\n\n*EX-BASKETWEAVE, Example: basketweave, pairs of 2 x 1 planks in 2 x 2 cells\n0, 0,0, 0,2\n0, 0,1, 2,2, 2,-2\n90, 0,0, 0,2\n90, 1,2, 2,2, 2,-2\n\n*EX-CROSSHATCH, Example: diagonal crosshatch at 0.5 spacing\n45, 0,0, 0,0.5\n135, 0,0, 0,0.5\n\n*EX-DASH-DOT-GRID, Example: dash-dot grid, 1 unit cells\n0, 0,0, 0,1, 0.5,-0.25,0,-0.25\n90, 0,0, 0,1, 0.5,-0.25,0,-0.25\n"}};
+
+/* ------------------------------------------------------------------ parser */
+
+function parsePat(text, fileName) {
+  const out = { fileName, directives: {}, patterns: [], issues: [] };
+  let cur = null;
+  text = text.replace(/\x1a[\s\S]*$/, '');  /* DOS end-of-file marker (Ctrl-Z), ignore it and anything after */
+  const lines = text.split(/\r\n|\r|\n/);
+  lines.forEach((raw, i) => {
+    const lineNo = i + 1;
+    const line = raw.trim();
+    if (cur) cur.lines.push(raw);
+    if (!line) return;
+    if (line.startsWith(';%')) {
+      const m = line.slice(2).match(/^([A-Za-z_]+)\s*=\s*(.*)$/);
+      if (m) (cur ? cur.directives : out.directives)[m[1].toUpperCase()] = m[2].trim();
+      return;
+    }
+    if (line.startsWith(';')) return;
+    if (line.startsWith('*')) {
+      if (cur) cur.lines.pop();
+      const body = line.slice(1);
+      const comma = body.indexOf(',');
+      const name = (comma < 0 ? body : body.slice(0, comma)).trim();
+      const desc = comma < 0 ? '' : body.slice(comma + 1).trim();
+      cur = { name, desc, families: [], directives: { ...out.directives }, issues: [], lines: [raw], fileName };
+      out.patterns.push(cur);
+      if (name.length > 31) cur.issues.push(`line ${lineNo}: name longer than 31 characters (AutoCAD limit)`);
+      if (/\s/.test(name)) cur.issues.push(`line ${lineNo}: name contains spaces`);
+      return;
+    }
+    const data = line.split(';')[0];
+    const parts = data.split(',').map(s => s.trim()).filter(s => s.length);
+    const nums = parts.map(Number);
+    if (!cur) { out.issues.push(`line ${lineNo}: data before any *NAME header`); return; }
+    const bad = parts.findIndex((s, j) => !Number.isFinite(nums[j]));
+    if (bad >= 0) { cur.issues.push(`line ${lineNo}: "${parts[bad]}" is not a number`); return; }
+    if (nums.length < 5) { cur.issues.push(`line ${lineNo}: needs angle, x, y, delta-x, delta-y (got ${nums.length} values)`); return; }
+    const [angle, x, y, dx, dy, ...dashes] = nums;
+    if (dy === 0) cur.issues.push(`line ${lineNo}: delta-y is 0, the family collapses to a single line`);
+    cur.families.push({ angle, x, y, dx, dy, dashes, lineNo });
+  });
+  for (const p of out.patterns) {
+    while (p.lines.length && !p.lines[p.lines.length - 1].trim()) p.lines.pop();
+    p.source = p.lines.join('\n') + '\n';
+    p.original = p.source;
+    delete p.lines;
+    if (!p.families.length) p.issues.push('no line families defined');
+  }
+  if (!out.patterns.length) out.issues.push('no *NAME header found');
+  return out;
+}
+
+/* --------------------------------------------------------------- geometry */
+
+const DEG = Math.PI / 180;
+
+/* a family after the bench's own scale / rotation is applied */
+function placeFamily(f, S, R) {
+  const a = (f.angle + R) * DEG, r = R * DEG;
+  const cr = Math.cos(r), sr = Math.sin(r);
+  return {
+    ux: Math.cos(a), uy: Math.sin(a),
+    ox: (f.x * cr - f.y * sr) * S, oy: (f.x * sr + f.y * cr) * S,
+    dx: f.dx * S, dy: f.dy * S,
+    dashes: f.dashes.map(d => d * S),
+  };
+}
+
+/*
+ * Line k of a family passes through  O + k*(dx*u + dy*n)  (delta is in the family's rotated frame),
+ * and its dash sequence starts at that point. In the family frame (s along u, t along n)
+ * line k sits at t = k*dy and its pattern phase starts at s = k*dx.
+ */
+function familyRanges(pf, rect) {
+  const { ux, uy, ox, oy, dy } = pf;
+  const nx = -uy, ny = ux;
+  let smin = Infinity, smax = -Infinity, tmin = Infinity, tmax = -Infinity;
+  for (const [px, py] of [[rect.x0, rect.y0], [rect.x1, rect.y0], [rect.x0, rect.y1], [rect.x1, rect.y1]]) {
+    const qx = px - ox, qy = py - oy;
+    const s = qx * ux + qy * uy, t = qx * nx + qy * ny;
+    if (s < smin) smin = s; if (s > smax) smax = s;
+    if (t < tmin) tmin = t; if (t > tmax) tmax = t;
+  }
+  let k0 = 0, k1 = 0;
+  if (Math.abs(dy) > 1e-12) {
+    const a = tmin / dy, b = tmax / dy;
+    k0 = Math.ceil(Math.min(a, b)); k1 = Math.floor(Math.max(a, b));
+  } else if (!(tmin <= 0 && tmax >= 0)) {
+    k0 = 1; k1 = 0;  /* the single line misses the view */
+  }
+  const period = pf.dashes.reduce((acc, d) => acc + Math.abs(d), 0);
+  return { smin, smax, k0, k1, period, solid: !pf.dashes.length || period <= 1e-12 };
+}
+
+function emitFamily(pf, rect, emitSeg, emitDot, budget) {
+  const { ux, uy, ox, oy, dx, dy, dashes } = pf;
+  const nx = -uy, ny = ux;
+  const { smin, smax, k0, k1, period, solid } = familyRanges(pf, rect);
+  let count = 0;
+  for (let k = k0; k <= k1; k++) {
+    const t = k * dy, shift = k * dx;
+    const bx = ox + t * nx, by = oy + t * ny;
+    const at = s => [bx + s * ux, by + s * uy];
+    if (solid) {
+      emitSeg(at(smin), at(smax)); count++;
+      continue;
+    }
+    let r = Math.floor((smin - shift) / period);
+    let pos = shift + r * period;
+    while (pos <= smax) {
+      for (const d of dashes) {
+        if (d > 0) {
+          const a = Math.max(pos, smin), b = Math.min(pos + d, smax);
+          if (a < b) { emitSeg(at(a), at(b)); count++; }
+          pos += d;
+        } else if (d < 0) {
+          pos -= d;
+        } else {
+          if (pos >= smin && pos <= smax) { emitDot(at(pos)); count++; }
+        }
+      }
+      if (count > budget) return count;
+    }
+  }
+  return count;
+}
+
+/* upper bound on the primitives a family produces in rect, to refuse hopeless zoom levels up front */
+function estimateFamily(pf, rect) {
+  const { smin, smax, k0, k1, period, solid } = familyRanges(pf, rect);
+  const lines = Math.max(0, k1 - k0 + 1);
+  if (solid) return lines;
+  const positive = pf.dashes.filter(d => d >= 0).length;
+  return lines * (Math.floor((smax - smin) / period) + 2) * positive;
+}
+
+function estimatePattern(p, S, R, rect) {
+  let est = 0;
+  for (const f of p.families) est += estimateFamily(placeFamily(f, S, R), rect);
+  return est;
+}
+
+/* fit the origins' extent, then shrink until the view holds at most `target` dashes */
+function fitView(p, S, R, w, h, target) {
+  const e = patternExtent(p, S, R);
+  let size = e.size;
+  for (let i = 0; i < 6; i++) {
+    const zoom = Math.min(w, h) / size;
+    const rect = { x0: e.cx - w / 2 / zoom, x1: e.cx + w / 2 / zoom, y0: e.cy - h / 2 / zoom, y1: e.cy + h / 2 / zoom };
+    const est = estimatePattern(p, S, R, rect);
+    if (est <= target) break;
+    size *= Math.max(0.25, Math.sqrt(target / est) * 0.9);
+  }
+  return { cx: e.cx, cy: e.cy, zoom: Math.min(w, h) / size };
+}
+
+function patternExtent(p, S, R) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, spacing = 0;
+  for (const f of p.families) {
+    const pf = placeFamily(f, S, R);
+    x0 = Math.min(x0, pf.ox); x1 = Math.max(x1, pf.ox);
+    y0 = Math.min(y0, pf.oy); y1 = Math.max(y1, pf.oy);
+    spacing = Math.max(spacing, Math.abs(pf.dy));
+  }
+  if (!Number.isFinite(x0)) return { cx: 0, cy: 0, size: 1 };
+  const size = Math.max(x1 - x0, y1 - y0, spacing * 8, 1e-6);
+  return { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, size: Math.max(size * 1.6, spacing * 3) };
+}
+
+/* ------------------------------------------------------------------ state */
+
+const BUDGET = 600000;
+const state = {
+  files: [], current: null, selected: -1, hover: -1,
+  view: { cx: 0, cy: 0, zoom: 1 },
+  scale: 1, rot: 0, weight: 1, colorize: false, origins: false,
+};
+const $ = id => document.getElementById(id);
+const canvas = $('view'), ctx = canvas.getContext('2d');
+
+function theme() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = n => cs.getPropertyValue(n).trim();
+  return { ink: v('--ink'), muted: v('--muted'), rule: v('--rule'), accent: v('--accent'), warn: v('--warn'), paper: v('--paper'),
+           dark: (cs.colorScheme || '').includes('dark') };
+}
+function familyColor(i, dark) {
+  const hue = (i * 137.508) % 360;
+  return `hsl(${hue.toFixed(1)} ${dark ? 60 : 55}% ${dark ? 66 : 38}%)`;
+}
+
+/* ----------------------------------------------------------------- render */
+
+function drawPattern(c, w, h, view, p, opts) {
+  const th = opts.theme;
+  c.save();
+  c.fillStyle = th.paper; c.fillRect(0, 0, w, h);
+  const z = view.zoom;
+  const rect = { x0: view.cx - w / 2 / z, x1: view.cx + w / 2 / z, y0: view.cy - h / 2 / z, y1: view.cy + h / 2 / z };
+  const X = x => (x - view.cx) * z + w / 2, Y = y => h / 2 - (y - view.cy) * z;
+  const placed = p.families.map(f => placeFamily(f, opts.scale, opts.rot));
+
+  let est = 0;
+  for (const pf of placed) est += estimateFamily(pf, rect);
+  if (est > (opts.budget || BUDGET)) { c.restore(); return { segments: 0, tooDense: est }; }
+
+  if (opts.axes) {
+    c.strokeStyle = th.rule; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(X(0), 0); c.lineTo(X(0), h); c.moveTo(0, Y(0)); c.lineTo(w, Y(0)); c.stroke();
+  }
+  const lw = opts.weight;
+  const sel = opts.selected;
+  let total = 0;
+  placed.forEach((pf, i) => {
+    const focus = sel < 0 || sel === i;
+    const color = sel === i ? th.accent : opts.colorize ? familyColor(i, th.dark) : th.ink;
+    c.strokeStyle = color; c.fillStyle = color;
+    c.globalAlpha = focus ? 1 : 0.22;
+    c.lineWidth = sel === i ? lw * 1.8 : lw;
+    c.lineCap = 'butt';
+    c.beginPath();
+    const dots = [];
+    total += emitFamily(pf, rect,
+      (a, b) => { c.moveTo(X(a[0]), Y(a[1])); c.lineTo(X(b[0]), Y(b[1])); },
+      d => dots.push(d), BUDGET - total);
+    c.stroke();
+    const ds = Math.max(1.5, c.lineWidth * 1.6);
+    for (const d of dots) c.fillRect(X(d[0]) - ds / 2, Y(d[1]) - ds / 2, ds, ds);
+  });
+  c.globalAlpha = 1;
+
+  if (opts.origins || sel >= 0) {
+    placed.forEach((pf, i) => {
+      if (sel >= 0 && sel !== i) return;
+      const x = X(pf.ox), y = Y(pf.oy);
+      c.strokeStyle = sel === i ? th.accent : th.warn; c.lineWidth = 1.25;
+      c.beginPath(); c.arc(x, y, 4, 0, Math.PI * 2); c.stroke();
+      if (sel === i) {
+        /* delta vector to the next line's start point, in the family's rotated frame */
+        const nx = -pf.uy, ny = pf.ux;
+        const ex = pf.ox + pf.dx * pf.ux + pf.dy * nx, ey = pf.oy + pf.dx * pf.uy + pf.dy * ny;
+        c.setLineDash([4, 3]);
+        c.beginPath(); c.moveTo(x, y); c.lineTo(X(ex), Y(ey)); c.stroke();
+        c.setLineDash([]);
+        c.beginPath(); c.arc(X(ex), Y(ey), 3, 0, Math.PI * 2); c.stroke();
+      }
+    });
+  }
+  c.restore();
+  return { segments: total, tooDense: 0 };
+}
+
+let raf = 0;
+function requestRender() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); }
+
+function render() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const p = state.current;
+  const th = theme();
+  if (!p) { ctx.fillStyle = th.paper; ctx.fillRect(0, 0, w, h); return; }
+  const t0 = performance.now();
+  const res = drawPattern(ctx, w, h, state.view, p, {
+    theme: th, scale: state.scale, rot: state.rot, weight: state.weight, colorize: state.colorize,
+    origins: state.origins, selected: state.selected >= 0 ? state.selected : state.hover, axes: true,
+  });
+  const ms = performance.now() - t0;
+  const notice = $('notice');
+  if (res.tooDense) {
+    notice.hidden = false;
+    notice.textContent = `Zoomed out too far: about ${Math.round(res.tooDense / 1000)}k dashes in view. Zoom in or press Fit.`;
+  } else notice.hidden = true;
+  const units = p.directives.UNITS ? ` ${p.directives.UNITS.toLowerCase()}` : '';
+  $('hud').innerHTML =
+    `<span><b>${esc(p.name)}</b>${p.directives.TYPE ? ` · ${esc(p.directives.TYPE.toLowerCase())}` : ''}</span>` +
+    `<span>${p.families.length} families · ${res.segments.toLocaleString()} dashes · ${ms.toFixed(1)} ms</span>` +
+    `<span id="cursor">${state.cursorText || `${(1 / state.view.zoom).toPrecision(3)}${units} / px`}</span>`;
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+
+function fit() {
+  const p = state.current; if (!p) return;
+  const w = canvas.clientWidth || 600, h = canvas.clientHeight || 400;
+  state.view = fitView(p, state.scale, state.rot, w, h, 60000);
+  requestRender();
+}
+
+/* --------------------------------------------------------------- sidebar */
+
+function thumb(p) {
+  const c = document.createElement('canvas');
+  const dpr = window.devicePixelRatio || 1;
+  c.width = 52 * dpr; c.height = 52 * dpr;
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  drawPattern(g, 52, 52, fitView(p, 1, 0, 52, 52, 5000), p,
+    { theme: theme(), scale: 1, rot: 0, weight: 0.6, selected: -1, colorize: false, origins: false, axes: false, budget: 60000 });
+  return c;
+}
+
+function buildDrawer() {
+  const drawer = $('drawer');
+  drawer.innerHTML = '';
+  file_groups_labels.clear();
+  const groups = new Map();
+  for (const file of state.files) {
+    if (!groups.has(file.group)) groups.set(file.group, []);
+    groups.get(file.group).push(file);
+  }
+  for (const [group, files] of groups) {
+    const label = document.createElement('div');
+    label.className = 'group-label';
+    const n = files.reduce((a, f) => a + f.patterns.length, 0);
+    label.innerHTML = `<span>${esc(group)}</span><span>${n}</span>`;
+    drawer.appendChild(label);
+    for (const file of files) {
+      const multi = file.patterns.length > 1 || file.issues.length;
+      if (multi) {
+        const sub = document.createElement('div');
+        sub.className = 'sub-label';
+        sub.textContent = `${file.fileName}${file.patterns.length > 1 ? ` · ${file.patterns.length} patterns` : ''}`;
+        file.subLabel = sub;
+        drawer.appendChild(sub);
+      }
+      if (file.issues.length) {
+        const e = document.createElement('div');
+        e.className = 'pat'; e.innerHTML = `<span></span><span class="err">${esc(file.issues.join('; '))}</span>`;
+        drawer.appendChild(e);
+      }
+      for (const p of file.patterns) {
+        const row = document.createElement('div');
+        row.className = 'pat'; row.tabIndex = 0; row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', String(p === state.current));
+        row.title = `${file.group}/${file.fileName}`;
+        const info = document.createElement('div');
+        info.style.minWidth = '0';
+        info.innerHTML = `<div class="nm">${esc(p.name)}</div><div class="ds">${esc(p.desc || `${p.families.length} families`)}</div>` +
+          (p.issues.length ? `<div class="err">${p.issues.length} issue${p.issues.length > 1 ? 's' : ''}</div>` : '');
+        const holder = document.createElement('div');
+        holder.style.width = '52px'; holder.style.height = '52px';
+        row.append(holder, info);
+        row.addEventListener('click', () => select(p));
+        row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(p); } });
+        p.row = row; p.thumbHolder = holder; p.group = file.group;
+        drawer.appendChild(row);
+      }
+    }
+    file_groups_labels.set(group, label);
+  }
+  applyFilter();
+  queueThumbs();
+}
+
+const file_groups_labels = new Map();
+function applyFilter() {
+  const q = $('search').value.trim().toLowerCase();
+  let shown = 0, total = 0;
+  const groupShown = new Map();
+  for (const file of state.files) {
+    let fileShown = 0;
+    for (const p of file.patterns) {
+      total++;
+      const hit = !q || `${p.name} ${p.desc} ${file.fileName}`.toLowerCase().includes(q);
+      if (p.row) p.row.hidden = !hit;
+      if (hit) { shown++; fileShown++; }
+    }
+    if (file.subLabel) file.subLabel.hidden = !fileShown;
+    groupShown.set(file.group, (groupShown.get(file.group) || 0) + fileShown);
+  }
+  for (const [g, label] of file_groups_labels) label.hidden = !groupShown.get(g);
+  $('count').textContent = q ? `${shown} / ${total}` : `${total}`;
+}
+$('search').addEventListener('input', applyFilter);
+
+let thumbObserver = null;
+function queueThumbs() {
+  if (thumbObserver) thumbObserver.disconnect();
+  thumbObserver = new IntersectionObserver(entries => {
+    for (const en of entries) {
+      if (!en.isIntersecting) continue;
+      const p = en.target._pattern;
+      thumbObserver.unobserve(en.target);
+      p.thumbHolder.replaceChildren(thumb(p));
+    }
+  }, { root: $('drawer'), rootMargin: '300px 0px' });
+  for (const f of state.files) for (const p of f.patterns) {
+    p.thumbHolder.replaceChildren();
+    p.thumbHolder._pattern = p;
+    thumbObserver.observe(p.thumbHolder);
+  }
+}
+
+function buildFamilies() {
+  const p = state.current;
+  const box = $('families');
+  if (!p) { box.innerHTML = ''; return; }
+  const th = theme();
+  const fmt = v => Number.isInteger(v) ? String(v) : v.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+  const rows = p.families.map((f, i) =>
+    `<tr class="fam${i === state.selected ? ' on' : ''}" data-i="${i}">` +
+    `<td>${state.colorize ? `<span class="swatch" style="background:${familyColor(i, th.dark)}"></span>` : ''}${i + 1}</td>` +
+    `<td>${fmt(f.angle)}</td><td>${fmt(f.x)}, ${fmt(f.y)}</td><td>${fmt(f.dx)}, ${fmt(f.dy)}</td>` +
+    `<td class="dash">${f.dashes.length ? f.dashes.map(fmt).join(' ') : 'solid'}</td></tr>`).join('');
+  box.innerHTML = `<table><thead><tr><th>#</th><th>angle</th><th>origin</th><th>delta</th><th style="text-align:left">dashes</th></tr></thead><tbody>${rows}</tbody></table>`;
+  $('famstat').textContent = state.selected >= 0 ? `family ${state.selected + 1} of ${p.families.length} · click again to clear` : `${p.families.length} · hover or click to isolate`;
+}
+
+$('families').addEventListener('mouseover', e => {
+  const tr = e.target.closest('tr.fam'); const i = tr ? Number(tr.dataset.i) : -1;
+  if (i !== state.hover) { state.hover = i; requestRender(); }
+});
+$('families').addEventListener('mouseleave', () => { state.hover = -1; requestRender(); });
+$('families').addEventListener('click', e => {
+  const tr = e.target.closest('tr.fam'); if (!tr) return;
+  const i = Number(tr.dataset.i);
+  state.selected = state.selected === i ? -1 : i;
+  buildFamilies(); requestRender();
+});
+
+function showIssues() {
+  const p = state.current, box = $('issues');
+  const list = p ? p.issues : [];
+  box.hidden = !list.length;
+  box.textContent = list.join('\n');
+  box.style.whiteSpace = 'pre-wrap';
+}
+
+function select(p, keepView) {
+  state.current = p; state.selected = -1; state.hover = -1;
+  for (const f of state.files) for (const q of f.patterns) q.row && q.row.setAttribute('aria-selected', String(q === p));
+  $('source').value = p.source;
+  buildFamilies(); showIssues();
+  try { localStorage.setItem('pat-bench:last', `${p.group}/${p.fileName}|${p.name}`); } catch (e) {}
+  if (!keepView) fit(); else requestRender();
+}
+
+/* ------------------------------------------------------------- editing */
+
+let editTimer = 0;
+$('source').addEventListener('input', () => {
+  clearTimeout(editTimer);
+  editTimer = setTimeout(() => {
+    const p = state.current; if (!p) return;
+    const parsed = parsePat($('source').value, p.fileName);
+    const np = parsed.patterns[0];
+    p.source = $('source').value;
+    if (np) {
+      Object.assign(p, { name: np.name, desc: np.desc, families: np.families, directives: np.directives,
+                         issues: np.issues.concat(parsed.patterns.length > 1 ? ['only the first *NAME block is used here'] : []) });
+    } else {
+      p.families = []; p.issues = parsed.issues;
+    }
+    if (state.selected >= p.families.length) state.selected = -1;
+    buildFamilies(); showIssues(); requestRender();
+    if (p.thumbHolder) p.thumbHolder.replaceChildren(thumb(p));
+    p.row.querySelector('.nm').textContent = p.name;
+  }, 250);
+});
+$('revert').addEventListener('click', () => {
+  const p = state.current; if (!p) return;
+  $('source').value = p.original;
+  $('source').dispatchEvent(new Event('input'));
+});
+$('copy').addEventListener('click', async () => {
+  const btn = $('copy'), text = $('source').value;
+  try { await navigator.clipboard.writeText(text); btn.textContent = 'Copied'; }
+  catch (e) { const ta = $('source'); ta.focus(); ta.select(); btn.textContent = 'Selected, press Ctrl+C'; }
+  setTimeout(() => { btn.textContent = 'Copy .pat'; }, 1600);
+});
+
+/* ------------------------------------------------------------- controls */
+
+const num = (id, key, fallback) => $(id).addEventListener('input', () => {
+  const v = parseFloat($(id).value);
+  state[key] = Number.isFinite(v) && (key !== 'scale' || v > 0) ? v : fallback;
+  requestRender();
+});
+num('scale', 'scale', 1); num('rot', 'rot', 0); num('weight', 'weight', 1);
+$('scale').addEventListener('change', fit);
+$('colorize').addEventListener('change', () => { state.colorize = $('colorize').checked; buildFamilies(); requestRender(); });
+$('origins').addEventListener('change', () => { state.origins = $('origins').checked; requestRender(); });
+$('fit').addEventListener('click', fit);
+const zoomBy = (f, sx, sy) => {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (sx === undefined) { sx = w / 2; sy = h / 2; }
+  const v = state.view;
+  const wx = v.cx + (sx - w / 2) / v.zoom, wy = v.cy - (sy - h / 2) / v.zoom;
+  v.zoom = Math.min(Math.max(v.zoom * f, 1e-6), 1e7);
+  v.cx = wx - (sx - w / 2) / v.zoom; v.cy = wy + (sy - h / 2) / v.zoom;
+  requestRender();
+};
+$('zin').addEventListener('click', () => zoomBy(1.5));
+$('zout').addEventListener('click', () => zoomBy(1 / 1.5));
+
+/* pan / zoom: drag, wheel, pinch */
+const pointers = new Map();
+let pinch = null;
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+  canvas.classList.add('dragging');
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) };
+  }
+});
+canvas.addEventListener('pointermove', e => {
+  const v = state.view, w = canvas.clientWidth, h = canvas.clientHeight;
+  const wx = v.cx + (e.offsetX - w / 2) / v.zoom, wy = v.cy - (e.offsetY - h / 2) / v.zoom;
+  state.cursorText = `x ${wx.toPrecision(5)}  y ${wy.toPrecision(5)}`;
+  const prev = pointers.get(e.pointerId);
+  if (!prev) { const c = document.getElementById('cursor'); if (c) c.textContent = state.cursorText; return; }
+  const cur = { x: e.offsetX, y: e.offsetY };
+  if (pointers.size === 1) {
+    v.cx -= (cur.x - prev.x) / v.zoom; v.cy += (cur.y - prev.y) / v.zoom;
+  } else if (pointers.size === 2 && pinch) {
+    pointers.set(e.pointerId, cur);
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch.d > 0) zoomBy(d / pinch.d, (a.x + b.x) / 2, (a.y + b.y) / 2);
+    pinch.d = d;
+  }
+  pointers.set(e.pointerId, cur);
+  requestRender();
+});
+const endPointer = e => {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  if (!pointers.size) canvas.classList.remove('dragging');
+};
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('pointerleave', () => { state.cursorText = ''; requestRender(); });
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomBy(Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015)), e.offsetX, e.offsetY);
+}, { passive: false });
+canvas.addEventListener('dblclick', fit);
+
+/* --------------------------------------------------------------- loading */
+
+function addFiles(entries, group, focusFirst) {
+  const parsed = entries.map(([name, text]) => Object.assign(parsePat(text, name), { group }));
+  /* loading the same file again (same folder + name) replaces it instead of listing it twice */
+  const key = f => `${f.group}/${f.fileName}`.toLowerCase();
+  const incoming = new Set(parsed.map(key));
+  const replaced = state.files.some(f => incoming.has(key(f)) && f.patterns.includes(state.current));
+  state.files = state.files.filter(f => !incoming.has(key(f)));
+  if (replaced) state.current = null;
+  state.files.push(...parsed);
+  buildDrawer();
+  const first = parsed.flatMap(f => f.patterns)[0];
+  if (focusFirst && first) { select(first); first.row.scrollIntoView({ block: 'nearest' }); }
+  return parsed;
+}
+
+/* .pat files are usually ASCII, older ones may be Windows-1252 */
+async function decode(file) {
+  const buf = await file.arrayBuffer();
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+  catch (e) { return new TextDecoder('windows-1252').decode(buf); }
+}
+const isPat = name => /\.pat$/i.test(name);
+const byName = (a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: 'base' });
+
+/* files: array of [File, relativePath] */
+async function loadFiles(files, fallbackGroup) {
+  const pats = files.filter(([f]) => isPat(f.name));
+  if (!pats.length) { flash(`No .pat files found in ${files.length} file${files.length === 1 ? '' : 's'}`); return; }
+  const groups = new Map();
+  for (const [f, rel] of pats) {
+    const parts = (rel || '').split('/').filter(Boolean);
+    const group = parts.length > 1 ? parts.slice(0, -1).join('/') : fallbackGroup;
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push(f);
+  }
+  let firstGroup = true;
+  for (const [group, list] of groups) {
+    const entries = await Promise.all(list.map(async f => [f.name, await decode(f)]));
+    entries.sort(byName);
+    addFiles(entries, group, firstGroup);
+    firstGroup = false;
+  }
+  const skipped = files.length - pats.length;
+  flash(`Loaded ${pats.length} .pat file${pats.length === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} other file${skipped === 1 ? '' : 's'}` : ''}`);
+}
+
+function flash(msg) {
+  $('count').textContent = msg;
+  clearTimeout(flash.t);
+  flash.t = setTimeout(applyFilter, 3500);
+}
+
+$('files').addEventListener('change', e => { loadFiles([...e.target.files].map(f => [f, '']), 'Opened files'); e.target.value = ''; });
+$('folder').addEventListener('change', e => { loadFiles([...e.target.files].map(f => [f, f.webkitRelativePath]), 'Opened folder'); e.target.value = ''; });
+
+/* drag and drop, including whole folders */
+function walkEntry(entry, prefix) {
+  return new Promise(resolve => {
+    if (entry.isFile) entry.file(f => resolve([[f, prefix + f.name]]), () => resolve([]));
+    else if (entry.isDirectory) {
+      const reader = entry.createReader(), all = [];
+      const more = () => reader.readEntries(async batch => {
+        if (!batch.length) {
+          const nested = await Promise.all(all.map(en => walkEntry(en, `${prefix}${entry.name}/`)));
+          resolve(nested.flat());
+        } else { all.push(...batch); more(); }
+      }, () => resolve([]));
+      more();
+    } else resolve([]);
+  });
+}
+let dragDepth = 0;
+window.addEventListener('dragenter', e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { dragDepth++; document.body.classList.add('dropping'); } });
+window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dropping'); } });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', async e => {
+  e.preventDefault(); dragDepth = 0; document.body.classList.remove('dropping');
+  const items = [...(e.dataTransfer?.items || [])];
+  const entries = items.map(it => it.webkitGetAsEntry && it.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length) {
+    const files = (await Promise.all(entries.map(en => walkEntry(en, '')))).flat();
+    loadFiles(files, 'Dropped files');
+  } else if (e.dataTransfer?.files?.length) {
+    loadFiles([...e.dataTransfer.files].map(f => [f, '']), 'Dropped files');
+  }
+});
+
+/* theme changes: redraw canvases with the new ink */
+const rethemed = () => { buildFamilies(); queueThumbs(); requestRender(); };
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', rethemed);
+new MutationObserver(rethemed).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+new ResizeObserver(requestRender).observe(canvas);
+
+/* boot with the sample set, sample files listed in name order */
+for (const [group, files] of Object.entries(SAMPLE_FILES)) addFiles(Object.entries(files).sort(byName), group, false);
+let start = state.files[0]?.patterns[0];
+try {
+  const last = localStorage.getItem('pat-bench:last');
+  if (last) {
+    const [fn, nm] = last.split('|');
+    start = state.files.flatMap(f => f.patterns).find(p => `${p.group}/${p.fileName}` === fn && p.name === nm) || start;
+  }
+} catch (e) {}
+if (start) { requestAnimationFrame(() => { select(start); start.row.scrollIntoView({ block: 'nearest' }); }); }
+</script>
+</body>
+</html>
