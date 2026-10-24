@@ -7,7 +7,8 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const script = html.slice(html.indexOf('<script>') + 8, html.indexOf('</script>'));
 const core = script.slice(script.indexOf('function parsePat'), script.indexOf('/* ------------------------------------------------------------------ state */'));
 const lib = new Function(`const BUDGET = 600000;\n${core}\nreturn { parsePat, placeFamily, emitFamily, estimatePattern, fitView };`)();
-const examples = readFileSync(new URL('../examples.pat', import.meta.url), 'utf8');
+import { LIBRARY_ORDER, libraryJson, embedded } from '../scripts/embed.js';
+const library = LIBRARY_ORDER.map(name => [name, readFileSync(new URL(`../patterns/${name}`, import.meta.url), 'utf8')]);
 
 const segments = (family, rect) => {
   const out = [];
@@ -15,11 +16,30 @@ const segments = (family, rect) => {
   return out;
 };
 
-test('examples parse without issues', () => {
-  const { patterns, issues } = lib.parsePat(examples, 'examples.pat');
-  assert.deepEqual(issues, []);
-  assert.equal(patterns.length, 4);
-  for (const p of patterns) assert.deepEqual(p.issues, [], p.name);
+test('library files parse without issues', () => {
+  let count = 0;
+  for (const [name, text] of library) {
+    const { patterns, issues } = lib.parsePat(text, name);
+    assert.deepEqual(issues, [], name);
+    for (const p of patterns) {
+      assert.deepEqual(p.issues, [], `${name} ${p.name}`);
+      assert.ok(p.name.length <= 31 && !/\s/.test(p.name), `${p.name}: AutoCAD names are 31 characters, no spaces`);
+      assert.equal(p.directives.UNITS, 'MM', p.name);
+      assert.equal(p.directives.TYPE, 'MODEL', p.name);
+      count++;
+    }
+  }
+  assert.ok(count >= 30, `expected the full library, found ${count} patterns`);
+});
+
+test('pattern names are unique across the library', () => {
+  const names = library.flatMap(([n, t]) => lib.parsePat(t, n).patterns.map(p => p.name));
+  assert.equal(new Set(names).size, names.length);
+});
+
+test('index.html carries the current library', () => {
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert.equal(embedded(html), `const SAMPLE_FILES = ${libraryJson()};`, 'run: npm run embed');
 });
 
 test('headers, comments, Revit directives and the DOS end-of-file marker', () => {
@@ -58,8 +78,8 @@ test('negative delta-y and dots', () => {
   assert.equal(dots, 4);
 });
 
-test('fit keeps every example within the dash budget', () => {
-  for (const p of lib.parsePat(examples, 'examples.pat').patterns) {
+test('fit keeps every library pattern within the dash budget', () => {
+  for (const p of library.flatMap(([n, t]) => lib.parsePat(t, n).patterns)) {
     const v = lib.fitView(p, 1, 0, 900, 600, 60000);
     const rect = { x0: v.cx - 450 / v.zoom, x1: v.cx + 450 / v.zoom, y0: v.cy - 300 / v.zoom, y1: v.cy + 300 / v.zoom };
     assert.ok(lib.estimatePattern(p, 1, 0, rect) <= 60000, p.name);
