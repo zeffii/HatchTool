@@ -12,7 +12,7 @@ from bpy.props import EnumProperty, FloatProperty, IntProperty, PointerProperty,
 
 from sverchok.node_tree import SverchCustomTreeNode
 from sverchok.data_structure import updateNode, match_long_repeat
-from sverchok.utils.hatch_pattern import (
+from sverchok.utils.hatch_module import (
     parse_pat, hatch_region, chain_segments, order_strokes, describe, RegionError, HatchTooDense)
 
 

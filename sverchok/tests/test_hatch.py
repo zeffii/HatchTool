@@ -49,9 +49,9 @@ def _install_stubs():
     sys.modules["mathutils"].Matrix = Matrix
 
     sys.path.insert(0, os.path.join(ROOT, "sverchok", "utils"))
-    import hatch_pattern
-    sys.modules["sverchok.utils.hatch_pattern"] = hatch_pattern
-    return hatch_pattern
+    import hatch_module
+    sys.modules["sverchok.utils.hatch_module"] = hatch_module
+    return hatch_module
 
 
 hp = _install_stubs()

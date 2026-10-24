@@ -14,7 +14,7 @@ Open `.pat` files or a whole folder (or drag them in), pan and zoom, isolate a l
 
 ## Sverchok node
 
-`sverchok/` holds the Hatch Pattern node: put `utils/hatch_pattern.py` in Sverchok's `utils/` and `nodes/hatch_pattern.py` in a node category, then add it to the menu.
+`sverchok/` holds the Hatch Pattern node: put `utils/hatch_module.py` in Sverchok's `utils/` and `nodes/hatch_pattern.py` in a node category, then add it to the menu.
 
 - In: one stream per object, Vertices plus Polygons (holes by even-odd) or Edges (closed boundaries), Scale, Offset X / Y. The plane is inferred.
 - Pattern: a Blender text block holding `.pat` data.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 008 · 2026-10-24
+
+- Sverchok core module renamed to `utils/hatch_module.py` (the node keeps `nodes/hatch_pattern.py`)
+
 ## 007 · 2026-10-24
 
 - Sverchok node: status line under the pattern picker with dash, dot and object counts
