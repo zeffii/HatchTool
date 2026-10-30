@@ -1,6 +1,6 @@
 {
   "name": "hatchtool",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Viewer and editor for AutoCAD / Revit .pat hatch patterns",
   "private": true,
   "type": "module",

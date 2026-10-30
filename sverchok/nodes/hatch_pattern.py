@@ -14,13 +14,10 @@ from sverchok.node_tree import SverchCustomTreeNode
 from sverchok.data_structure import updateNode, match_long_repeat
 from sverchok.utils.hatch_module import (
     parse_pat, hatch_region, chain_segments, order_strokes, describe, RegionError, HatchTooDense)
-
 from sverchok.utils.handle_blender_data import keep_enum_reference
 
 # parsed patterns per text block, re-parsed only when the text changes
 _parse_cache = {}
-# enum items must stay referenced while Blender shows them
-_enum_items = {}
 
 
 def patterns_from_text(text):
@@ -33,6 +30,7 @@ def patterns_from_text(text):
         cached = _parse_cache[text.name] = (source, patterns)
     return cached[1]
 
+
 @keep_enum_reference
 def pattern_items(self, context):
     patterns = patterns_from_text(self.pattern_text)
@@ -40,7 +38,6 @@ def pattern_items(self, context):
         items = [('NONE', 'No patterns', 'Pick a text block holding .pat data', 0)]
     else:
         items = [(p.name, p.name, p.description or p.name, i) for i, p in enumerate(patterns)]
-    _enum_items[self.node_id] = items
     return items
 
 

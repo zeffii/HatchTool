@@ -1,5 +1,10 @@
 # Changelog
 
+## 010 · 2026-10-30
+
+- Sverchok node: dropped the old `_enum_items` cache, `@keep_enum_reference` does that job now
+- `hatch_pattern.py` back to LF line endings; `.gitattributes` keeps text files LF from now on
+
 ## 009 · 2026-10-30
 
 - Phone layout: one scrolling column with the sheet first, then the pattern list, line families and source
