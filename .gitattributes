@@ -1,1 +1,3 @@
 * text=auto eol=lf
+# patgen writes .pat with CRLF on purpose (AutoCAD / Revit), keep them byte for byte
+*.pat -text
