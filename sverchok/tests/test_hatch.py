@@ -29,7 +29,7 @@ class _Any(types.ModuleType):
 
 def _install_stubs():
     for name in ["bpy", "bpy.props", "mathutils", "sverchok", "sverchok.node_tree",
-                 "sverchok.data_structure", "sverchok.utils"]:
+                 "sverchok.data_structure", "sverchok.utils", "sverchok.utils.handle_blender_data"]:
         sys.modules.setdefault(name, _Any(name))
     sys.modules["bpy"].types = NS(Node=type("Node", (), {}), Text=None)
     sys.modules["bpy"].props = sys.modules["bpy.props"]
@@ -41,6 +41,7 @@ def _install_stubs():
         return [list(l) + [l[-1]] * (n - len(l)) for l in lsts]
     sys.modules["sverchok.data_structure"].match_long_repeat = match_long_repeat
     sys.modules["sverchok.data_structure"].updateNode = lambda *a: None
+    sys.modules["sverchok.utils.handle_blender_data"].keep_enum_reference = lambda fn: fn
 
     class Matrix(list):
         @staticmethod

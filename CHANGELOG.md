@@ -7,6 +7,7 @@
 - HUD moves to the bottom of the sheet on phones so it clears the zoom buttons; bigger touch targets
 - Inputs use 16px text on phones so iOS no longer zooms in on focus
 - Selecting a pattern no longer scrolls the whole page on phones
+- Python tests stub `keep_enum_reference`, so the deploy runs again after the node's switch to it
 
 ## 008 · 2026-10-24
 
