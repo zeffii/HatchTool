@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
-<title>HatchTool 008</title>
+<title>HatchTool 009</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -103,6 +103,7 @@ aside {
 .pat .err { color: var(--warn); font-size: 12px; }
 
 .sheet { position: relative; min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; }
+.stage { position: relative; min-height: 0; }
 #view { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; background: var(--paper); }
 #view.dragging { cursor: grabbing; }
 .hud {
@@ -148,16 +149,44 @@ textarea {
   background: color-mix(in srgb, var(--paper) 80%, transparent); z-index: 20;
 }
 
+button, .filebtn, .linkbtn, .pat, tr.fam { touch-action: manipulation; }
+
+/* phones: one scrolling column, the sheet first, then the pattern list, then the bench */
 @media (max-width: 760px) {
-  body { overflow: auto; height: auto; }
-  html { height: auto; }
-  main { grid-template-columns: minmax(0, 1fr); }
-  aside { border-right: 0; border-bottom: 1px solid var(--rule); max-height: 210px; order: 2; }
-  .sheet { order: 1; height: 62vh; }
-  .bench { grid-template-columns: minmax(0, 1fr); max-height: none; }
+  html, body { height: auto; }
+  body { overflow: auto; }
+  header { gap: 8px 12px; padding-block: 8px; }
+  h1 { font-size: 16px; }
+  .controls { gap: 6px 14px; }
+  main { display: flex; flex-direction: column; }
+  .sheet { display: contents; }
+  .stage { order: 1; height: 58svh; min-height: 260px; border-bottom: 1px solid var(--rule); }
+  aside { order: 2; border-right: 0; border-bottom: 1px solid var(--rule); max-height: 45svh; }
+  .bench { order: 3; grid-template-columns: minmax(0, 1fr); max-height: none; min-height: 0; }
   .bench > section + section { border-left: 0; border-top: 1px solid var(--rule); }
   .families { max-height: 240px; }
   textarea { min-height: 220px; }
+  .hud { top: auto; bottom: 8px; left: 8px; right: 8px; width: fit-content; max-width: calc(100% - 16px); font-size: 11px; padding: 4px 7px; }
+  .zoom { top: 8px; right: 8px; }
+  .zoom button { width: 40px; padding: 9px 0; }
+  .pat { padding: 8px 14px; }
+  /* 16px stops iOS zooming the page when a field gets focus */
+  .search input, .ctl input[type="number"], textarea { font-size: 16px; }
+}
+/* phone on its side: the sheet takes nearly the whole screen, scroll down for the rest */
+@media (max-width: 960px) and (max-height: 500px) and (orientation: landscape) {
+  html, body { height: auto; }
+  body { overflow: auto; }
+  main { display: flex; flex-direction: column; }
+  .sheet { display: contents; }
+  header { gap: 6px 12px; padding-block: 6px; }
+  h1 { font-size: 16px; }
+  .controls { order: 3; flex-basis: 100%; gap: 6px 14px; }
+  .stage { order: 1; height: 86svh; border-bottom: 1px solid var(--rule); }
+  aside { order: 2; border-right: 0; border-bottom: 1px solid var(--rule); max-height: 70svh; }
+  .bench { order: 3; max-height: none; min-height: 260px; }
+  .hud { top: auto; bottom: 8px; font-size: 11px; }
+  .search input, .ctl input[type="number"], textarea { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -185,7 +214,7 @@ textarea {
     <div class="drawer" id="drawer" role="listbox" aria-label="Patterns"></div>
   </aside>
   <div class="sheet">
-    <div style="position:relative; min-height:0">
+    <div class="stage">
       <canvas id="view" aria-label="Hatch preview"></canvas>
       <div class="hud" id="hud"></div>
       <div class="zoom">
@@ -390,6 +419,12 @@ const state = {
   scale: 1, rot: 0, weight: 1, colorize: false, origins: false,
 };
 const $ = id => document.getElementById(id);
+/* scroll only the drawer to a row; scrollIntoView would also scroll the page on phones */
+function revealRow(row) {
+  const d = $('drawer'), dr = d.getBoundingClientRect(), rr = row.getBoundingClientRect();
+  if (rr.top < dr.top) d.scrollTop += rr.top - dr.top;
+  else if (rr.bottom > dr.bottom) d.scrollTop += rr.bottom - dr.bottom;
+}
 const canvas = $('view'), ctx = canvas.getContext('2d');
 
 function theme() {
@@ -768,7 +803,7 @@ function addFiles(entries, group, focusFirst) {
   state.files.push(...parsed);
   buildDrawer();
   const first = parsed.flatMap(f => f.patterns)[0];
-  if (focusFirst && first) { select(first); first.row.scrollIntoView({ block: 'nearest' }); }
+  if (focusFirst && first) { select(first); revealRow(first.row); }
   return parsed;
 }
 
@@ -860,7 +895,7 @@ try {
     start = state.files.flatMap(f => f.patterns).find(p => `${p.group}/${p.fileName}` === fn && p.name === nm) || start;
   }
 } catch (e) {}
-if (start) { requestAnimationFrame(() => { select(start); start.row.scrollIntoView({ block: 'nearest' }); }); }
+if (start) { requestAnimationFrame(() => { select(start); revealRow(start.row); }); }
 </script>
 </body>
 </html>

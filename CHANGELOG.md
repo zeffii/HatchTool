@@ -1,5 +1,13 @@
 # Changelog
 
+## 009 · 2026-10-30
+
+- Phone layout: one scrolling column with the sheet first, then the pattern list, line families and source
+- Landscape phones: compact header and a near full-screen sheet
+- HUD moves to the bottom of the sheet on phones so it clears the zoom buttons; bigger touch targets
+- Inputs use 16px text on phones so iOS no longer zooms in on focus
+- Selecting a pattern no longer scrolls the whole page on phones
+
 ## 008 · 2026-10-24
 
 - Sverchok core module renamed to `utils/hatch_module.py` (the node keeps `nodes/hatch_pattern.py`)
