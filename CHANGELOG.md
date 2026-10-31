@@ -1,5 +1,12 @@
 # Changelog
 
+## 011 · 2026-10-31
+
+- Sverchok Stairs node (`nodes/stairs.py`, `utils/stairs_module.py`): concrete, precast and timber flights from two boundaries, riser lines and a walking path
+- Curved and bent risers (chains of edges), winders fanning out from one point; square, chamfer and round toes
+- Rise and going checks (private / public) with a note on how many risers are missing; concrete adds a landing when the boundaries carry on past the top riser
+- `tools/stairs_preview.py` renders the test sketches with matplotlib
+
 ## 010 · 2026-10-30
 
 - Sverchok node: dropped the old `_enum_items` cache, `@keep_enum_reference` does that job now

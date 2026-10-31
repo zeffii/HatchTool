@@ -20,6 +20,10 @@ Open `.pat` files or a whole folder (or drag them in), pan and zoom, isolate a l
 - Pattern: a Blender text block holding `.pat` data.
 - Out: Vertices / Edges, Dots, Stroke Vertices / Edges (chained, ordered strokes for plotting), Plane matrix.
 
+## Stairs node
+
+`sverchok/nodes/stairs.py` with `utils/stairs_module.py`: concrete, precast or timber stairs from a plan sketch. In: Boundaries (`[[side], [side]]`), Riser Vertices / Edges (one riser per chain of edges, the top one is the landing edge), Path (walking line, bottom first), Level Start / End. Out: Vertices / Polygons, Rise, Goings. `python3 tools/stairs_preview.py out.png` renders the test sketches.
+
 ## The format in one line
 
 `angle, x, y, delta-x, delta-y [, dashes…]`: line *k* passes through `origin + k·(dx·u + dy·n)`, with the delta in the family's rotated frame; dashes > 0 draw, < 0 are gaps, 0 is a dot.
